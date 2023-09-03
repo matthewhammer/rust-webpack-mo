@@ -1,4 +1,4 @@
-use motoko::{vm_types::Core, Share};
+use motoko::Share;
 use motoko_proc_macro::parse_static;
 use wasm_bindgen::prelude::*;
 
@@ -58,9 +58,6 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     // scriptable with Motoko code running in the VM.
     //
 
-    // To do -- do this, but in Motoko, not in Rust:
-    let mut core = Core::empty();
-
     // PROGRAM as Motoko:
     // let c = canvas.getContext("2d");
     // c.beginPath();
@@ -69,18 +66,22 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     //
     let program = parse_static!("consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); ").clone();
 
-    //let program = parse_static!("consoleLog \"hello from Motoko\"").clone();
+    movm::update(|core| {
+        core.eval_open_block(
+            vec![
+                (
+                    "consoleLog",
+                    console::ConsoleLogValue {}.into_value().share(),
+                ),
+                ("canvas", canvas_value),
+            ],
+            program,
+        )
+        .expect("program evaluation.");
+    });
 
-    let _ = core.eval_open_block(
-        vec![
-            (
-                "consoleLog",
-                console::ConsoleLogValue {}.into_value().share(),
-            ),
-            ("canvas", canvas_value),
-        ],
-        program,
-    );
+    web_sys::console::log_1(&JsValue::from_str(format!("{:?}", movm::get()).as_str()));
+
     /*
         PROGRAM as Rust:
         --------------------
