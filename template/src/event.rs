@@ -1,16 +1,13 @@
-use wasm_bindgen::prelude::*;
-use web_sys::{console, Event, KeyboardEvent, MouseEvent, Window};
+use web_sys::{Event, KeyboardEvent, MouseEvent};
 
 use motoko::vm_types::CoreSource;
-use motoko::{ast::Id, Interruption, Share, Value, Value_};
+use motoko::{ast::Id, Interruption, Share, Value};
 
 use std::hash::{Hash, Hasher};
 
-use crate::context::ContextValue;
-
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct EventValue {
-    event: Event,
+pub struct EventValue {
+    pub event: Event,
 }
 
 impl Hash for EventValue {
@@ -20,8 +17,8 @@ impl Hash for EventValue {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct MouseEventValue {
-    mouse_event: MouseEvent,
+pub struct MouseEventValue {
+    pub mouse_event: MouseEvent,
 }
 
 impl Hash for MouseEventValue {
@@ -31,8 +28,8 @@ impl Hash for MouseEventValue {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct KeyboardEventValue {
-    keyboard_event: KeyboardEvent,
+pub struct KeyboardEventValue {
+    pub keyboard_event: KeyboardEvent,
 }
 
 impl Hash for KeyboardEventValue {
@@ -43,7 +40,6 @@ impl Hash for KeyboardEventValue {
 
 //#[macro_use]
 use motoko::{
-    ast::Inst,
     dynamic::{Dynamic, Result},
     type_mismatch,
     vm_types::Store,
