@@ -1,18 +1,14 @@
-use wasm_bindgen::prelude::*;
 use web_sys::Document;
 
-use motoko::vm_types::CoreSource;
-use motoko::{ast::Id, Interruption, Share, Value, Value_};
+use motoko::{ast::Id, Interruption, Value_};
 
 use std::hash::{Hash, Hasher};
-
-use crate::context::ContextValue;
 
 //#[macro_use]
 use motoko::{
     ast::Inst,
     dynamic::{Dynamic, Result},
-    type_mismatch,
+    //    type_mismatch,
     vm_types::Store,
 };
 
@@ -54,10 +50,10 @@ impl Dynamic for DocumentValue {
 }
 
 impl Dynamic for DocumentMethodValue {
-    fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, args: Value_) -> Result {
+    fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, _args: Value_) -> Result {
         match self.method {
             DocumentMethod::GetElementById => todo!(),
-            _ => type_mismatch!(file!(), line!()),
+            /* _ => type_mismatch!(file!(), line!()), */
         }
     }
 }

@@ -51,6 +51,12 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
 
     let document = window.document().expect("should have a document on window");
 
+    let document_value: Value_ = document::DocumentValue {
+        document: document.clone(),
+    }
+    .into_value()
+    .share();
+
     let canvas = document
         .get_element_by_id(canvas_id)
         .unwrap()
@@ -74,16 +80,17 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     // c.arc(137.0, 137.0, 42.666, 0.0, 3.0 * std::f64::consts::PI);
     // c.stroke();
     //
-    let program = parse_static!("consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); var x = 666;").clone();
+    let program = parse_static!("window.addEventListener(\"keydown\", func(e){ consoleLog(\"Motoko key press\"); }); consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); var x = 666;").clone();
 
     movm::update(|core| {
         core.eval_open_block(
             vec![
+                ("canvas", canvas_value),
                 (
                     "consoleLog",
                     console::ConsoleLogValue {}.into_value().share(),
                 ),
-                ("canvas", canvas_value),
+                ("document", document_value),
                 ("window", window_value),
             ],
             program,

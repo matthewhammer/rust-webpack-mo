@@ -1,5 +1,5 @@
 use motoko::{
-    ast::{Exp, Exp_, NodeData},
+    ast::{Exp, NodeData},
     value::Value_,
     vm_types::{Core, Result},
     Share,
@@ -29,10 +29,15 @@ where
     r.unwrap()
 }
 
-pub fn call(f: Exp_, v: Value_) -> Result {
+pub fn call(f: Value_, v: Value_) -> Result {
     update(|core| {
         core.eval_exp(
-            NodeData::eval(Exp::Call(f, None, NodeData::eval(Exp::Value_(v)).share())).share(),
+            NodeData::eval(Exp::Call(
+                NodeData::eval(Exp::Value_(f)).share(),
+                None,
+                NodeData::eval(Exp::Value_(v)).share(),
+            ))
+            .share(),
         )
     })
 }
