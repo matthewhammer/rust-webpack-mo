@@ -1,10 +1,15 @@
-use motoko::{vm_types::Core, Share};
+use motoko::Share;
 use motoko_proc_macro::parse_static;
 use wasm_bindgen::prelude::*;
 
 mod canvas;
 mod console;
 mod context;
+mod document;
+mod event;
+mod window;
+
+mod movm;
 
 //#[macro_use]
 use motoko::{
@@ -38,7 +43,19 @@ pub fn main_js() -> Result<(), JsValue> {
 pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     let window = web_sys::window().unwrap();
 
+    let window_value = window::WindowValue {
+        window: window.clone(),
+    }
+    .into_value()
+    .share();
+
     let document = window.document().expect("should have a document on window");
+
+    let document_value: Value_ = document::DocumentValue {
+        document: document.clone(),
+    }
+    .into_value()
+    .share();
 
     let canvas = document
         .get_element_by_id(canvas_id)
@@ -57,29 +74,32 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     // scriptable with Motoko code running in the VM.
     //
 
-    // To do -- do this, but in Motoko, not in Rust:
-    let mut core = Core::empty();
-
     // PROGRAM as Motoko:
     // let c = canvas.getContext("2d");
     // c.beginPath();
     // c.arc(137.0, 137.0, 42.666, 0.0, 3.0 * std::f64::consts::PI);
     // c.stroke();
     //
-    let program = parse_static!("consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); ").clone();
+    let program = parse_static!("window.addEventListener(\"keydown\", func(e){ consoleLog(\"Motoko key press\"); }); consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); var x = 666;").clone();
 
-    //let program = parse_static!("consoleLog \"hello from Motoko\"").clone();
+    movm::update(|core| {
+        core.eval_open_block(
+            vec![
+                ("canvas", canvas_value),
+                (
+                    "consoleLog",
+                    console::ConsoleLogValue {}.into_value().share(),
+                ),
+                ("document", document_value),
+                ("window", window_value),
+            ],
+            program,
+        )
+        .expect("program evaluation.");
+    });
 
-    let _ = core.eval_open_block(
-        vec![
-            (
-                "consoleLog",
-                console::ConsoleLogValue {}.into_value().share(),
-            ),
-            ("canvas", canvas_value),
-        ],
-        program,
-    );
+    web_sys::console::log_1(&JsValue::from_str(format!("{:?}", movm::get()).as_str()));
+
     /*
         PROGRAM as Rust:
         --------------------
