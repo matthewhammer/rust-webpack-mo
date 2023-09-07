@@ -7,7 +7,7 @@ use motoko::{ast::Id, shared::FastClone, Interruption, Share, Value, Value_};
 
 use std::hash::{Hash, Hasher};
 
-use crate::event::KeyboardEventValue;
+use crate::event::{KeyboardEventValue, MouseEventValue};
 
 //#[macro_use]
 use motoko::{
@@ -25,6 +25,7 @@ pub struct WindowValue {
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub enum WindowMethod {
     AddEventListener,
+    GetNavigator,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -58,6 +59,13 @@ impl Dynamic for WindowValue {
             }
             .into_value()
             .into())
+        } else if name == "getNavigator" {
+            Ok(WindowMethodValue {
+                window: self.clone(),
+                method: WindowMethod::GetNavigator,
+            }
+            .into_value()
+            .into())
         } else {
             Err(Interruption::UnboundIdentifer(Id::new(name.to_string())))
         }
@@ -67,10 +75,37 @@ impl Dynamic for WindowValue {
 impl Dynamic for WindowMethodValue {
     fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, args: Value_) -> Result {
         match self.method {
+            WindowMethod::GetNavigator => Ok(crate::navigator::NavigatorValue {
+                navigator: self.window.window.navigator(),
+            }
+            .into_value()
+            .share()),
             WindowMethod::AddEventListener => {
                 let tup = motoko::vm::match_tuple(2, args)?;
                 let typ = motoko::vm::assert_value_is_string(&tup[0])?;
                 match typ.as_str() {
+                    "click" | "mousedown" | "mouseup" | "mouseenter" | "mouseleave"
+                    | "mouseover" | "mouseout" => {
+                        let f = tup[1].fast_clone();
+                        let cl = Closure::<dyn FnMut(_)>::new(
+                            move |mouse_event: web_sys::MouseEvent| {
+                                crate::movm::call(
+                                    f.fast_clone(),
+                                    MouseEventValue { mouse_event }.into_value().share(),
+                                )
+                                .expect("movm::call, window element, mouse event handler.");
+                            },
+                        );
+                        self.window
+                            .window
+                            .add_event_listener_with_callback(
+                                typ.as_str(),
+                                cl.as_ref().unchecked_ref(),
+                            )
+                            .expect("add_event_listener_with_callback");
+                        cl.forget(); // to do -- fix potential memory leak here. -- https://stackoverflow.com/a/63641967
+                        Ok(Value::Unit.share())
+                    }
                     "keydown" | "keyup" | "keypress" => {
                         let f = tup[1].fast_clone();
                         let cl = Closure::<dyn FnMut(_)>::new(
