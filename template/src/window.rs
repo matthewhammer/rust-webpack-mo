@@ -25,7 +25,6 @@ pub struct WindowValue {
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub enum WindowMethod {
     AddEventListener,
-    GetNavigator,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -59,13 +58,12 @@ impl Dynamic for WindowValue {
             }
             .into_value()
             .into())
-        } else if name == "getNavigator" {
-            Ok(WindowMethodValue {
-                window: self.clone(),
-                method: WindowMethod::GetNavigator,
+        } else if name == "navigator" {
+            Ok(crate::navigator::NavigatorValue {
+                navigator: self.window.navigator(),
             }
             .into_value()
-            .into())
+            .share())
         } else {
             Err(Interruption::UnboundIdentifer(Id::new(name.to_string())))
         }
@@ -75,11 +73,6 @@ impl Dynamic for WindowValue {
 impl Dynamic for WindowMethodValue {
     fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, args: Value_) -> Result {
         match self.method {
-            WindowMethod::GetNavigator => Ok(crate::navigator::NavigatorValue {
-                navigator: self.window.window.navigator(),
-            }
-            .into_value()
-            .share()),
             WindowMethod::AddEventListener => {
                 let tup = motoko::vm::match_tuple(2, args)?;
                 let typ = motoko::vm::assert_value_is_string(&tup[0])?;
