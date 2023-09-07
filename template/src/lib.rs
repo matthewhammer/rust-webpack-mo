@@ -5,7 +5,10 @@ use wasm_bindgen::prelude::*;
 mod canvas;
 mod console;
 mod context;
+mod document;
 mod event;
+mod window;
+
 mod movm;
 
 //#[macro_use]
@@ -39,6 +42,12 @@ pub fn main_js() -> Result<(), JsValue> {
 #[wasm_bindgen]
 pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     let window = web_sys::window().unwrap();
+
+    let window_value = window::WindowValue {
+        window: window.clone(),
+    }
+    .into_value()
+    .share();
 
     let document = window.document().expect("should have a document on window");
 
@@ -75,6 +84,7 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
                     console::ConsoleLogValue {}.into_value().share(),
                 ),
                 ("canvas", canvas_value),
+                ("window", window_value),
             ],
             program,
         )

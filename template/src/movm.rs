@@ -1,4 +1,9 @@
-use motoko::vm_types::Core;
+use motoko::{
+    ast::{Exp, Exp_, NodeData},
+    value::Value_,
+    vm_types::{Core, Result},
+    Share,
+};
 use std::cell::RefCell;
 
 // Define a global mutable cell for the_core using RefCell and Rc
@@ -12,12 +17,22 @@ pub fn get() -> Core {
 }
 
 // Accessor to read and update the value of the_core (mutably)
-pub fn update<F>(update_fn: F)
+pub fn update<F, R>(update_fn: F) -> R
 where
-    F: FnOnce(&mut Core),
+    F: FnOnce(&mut Core) -> R,
 {
+    let mut r: Option<R> = None;
     THE_CORE.with(|c| {
         let mut core = c.borrow_mut();
-        update_fn(&mut core);
+        r = Some(update_fn(&mut core));
     });
+    r.unwrap()
+}
+
+pub fn call(f: Exp_, v: Value_) -> Result {
+    update(|core| {
+        core.eval_exp(
+            NodeData::eval(Exp::Call(f, None, NodeData::eval(Exp::Value_(v)).share())).share(),
+        )
+    })
 }
