@@ -25,6 +25,7 @@ pub struct WindowValue {
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub enum WindowMethod {
     AddEventListener,
+    RequestAnimationFrame,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -58,6 +59,13 @@ impl Dynamic for WindowValue {
             }
             .into_value()
             .into())
+        } else if name == "requestAnimationFrame" {
+            Ok(WindowMethodValue {
+                window: self.clone(),
+                method: WindowMethod::RequestAnimationFrame,
+            }
+            .into_value()
+            .into())
         } else if name == "navigator" {
             Ok(crate::navigator::NavigatorValue {
                 navigator: self.window.navigator(),
@@ -73,6 +81,19 @@ impl Dynamic for WindowValue {
 impl Dynamic for WindowMethodValue {
     fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, args: Value_) -> Result {
         match self.method {
+            WindowMethod::RequestAnimationFrame => {
+                let cl = Closure::<dyn FnMut(_)>::new(move |timestamp: wasm_bindgen::JsValue| {
+                    let timestamp = timestamp.unchecked_into_f64();
+                    crate::movm::call(args.fast_clone(), Value::Float(timestamp.into()).into())
+                        .expect("movm::call, window element, request animation frame.");
+                });
+                self.window
+                    .window
+                    .request_animation_frame(cl.as_ref().unchecked_ref())
+                    .expect("request_animation_frame");
+                cl.forget(); // to do -- fix potential memory leak here. -- https://stackoverflow.com/a/63641967
+                Ok(Value::Unit.share())
+            }
             WindowMethod::AddEventListener => {
                 let tup = motoko::vm::match_tuple(2, args)?;
                 let typ = motoko::vm::assert_value_is_string(&tup[0])?;

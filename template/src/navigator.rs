@@ -57,7 +57,11 @@ impl Dynamic for NavigatorMethodValue {
         match self.method {
             NavigatorMethod::GetGamepads => {
                 let mut res = im_rc::Vector::new();
-                let gamepads = self.navigator.navigator.get_gamepads().expect("get_gamepads");
+                let gamepads = self
+                    .navigator
+                    .navigator
+                    .get_gamepads()
+                    .expect("get_gamepads");
                 for gamepad in gamepads.iter() {
                     res.push_back(
                         crate::gamepad::GamepadValue {
