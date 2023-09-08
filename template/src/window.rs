@@ -94,6 +94,7 @@ impl Dynamic for WindowMethodValue {
                 cl.forget(); // to do -- fix potential memory leak here. -- https://stackoverflow.com/a/63641967
                 Ok(Value::Unit.share())
             }
+
             WindowMethod::AddEventListener => {
                 let tup = motoko::vm::match_tuple(2, args)?;
                 let typ = motoko::vm::assert_value_is_string(&tup[0])?;
@@ -120,6 +121,7 @@ impl Dynamic for WindowMethodValue {
                         cl.forget(); // to do -- fix potential memory leak here. -- https://stackoverflow.com/a/63641967
                         Ok(Value::Unit.share())
                     }
+
                     "keydown" | "keyup" | "keypress" => {
                         let f = tup[1].fast_clone();
                         let cl = Closure::<dyn FnMut(_)>::new(
@@ -141,6 +143,7 @@ impl Dynamic for WindowMethodValue {
                         cl.forget(); // to do -- fix potential memory leak here. -- https://stackoverflow.com/a/63641967
                         Ok(Value::Unit.share())
                     }
+
                     _ => todo!(),
                 }
             } /* _ => type_mismatch!(file!(), line!()), */
