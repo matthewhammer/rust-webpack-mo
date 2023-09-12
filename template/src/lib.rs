@@ -99,8 +99,8 @@ func frame(t) {
       while(j < 20) {
         x := x + 16.0;
         j := j + 1;
-        // c.setFillStyle("red");
-        // c.fillRect(x, y, 1.0, 1.0);
+        c.setFillStyle("red");
+        c.fillRect(x, y, 16.0, 16.0);
         // c.putImageData(i, x, y);
       };
       i := i + 1;
