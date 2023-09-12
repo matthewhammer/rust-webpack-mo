@@ -20,7 +20,8 @@ pub struct ConsoleLogValue {
 
 impl Dynamic for ConsoleLogValue {
     fn call(&mut self, _store: &mut Store, _inst: &Option<Inst>, args: Value_) -> Result {
-        let msg = motoko::vm::assert_value_is_string(&args)?;
+        let msg =
+            motoko::vm::assert_value_is_string(&args).unwrap_or_else(|_| format!("{:?}", &args));
         console::log_1(&JsValue::from_str(msg.as_str()));
         Ok(Value::Unit.share())
     }
