@@ -87,16 +87,24 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
 var frames = 0;
 let c = canvas.getContext("2d");
 let i = c.getImageData(0, 0, 16, 16);
+
+var i = 0;
+var y = 0.0;
+var j = 0;
+var x = 0.0;
+var lastTime = 0.0;
 func frame(t) {
-  var i = 0;
-  var y = 0.0;
+  let diff = t - lastTime;
+  lastTime := t;
+  consoleLog((1000.0 / diff, frames));
+  i := 0;
+  y := 0.0;
   frames := frames + 1;
-  consoleLog(frames);
   // 320 x 240 = (20 x 15) x 16
-  while(i < 15) {
-      var j = 0;
-      var x = 0.0;
-      while(j < 20) {
+  while(i < 30) {
+      j := 0;
+      x := 0.0;
+      while(j < 30) {
         x := x + 16.0;
         j := j + 1;
         c.setFillStyle("red");

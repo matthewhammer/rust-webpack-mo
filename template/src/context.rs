@@ -1,3 +1,4 @@
+use motoko::vm_types::CoreSource;
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, ImageData};
 
@@ -11,7 +12,6 @@ use motoko::{
     dynamic::{Dynamic, Result},
     vm_types::Store,
 };
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ContextValue {
     pub context: CanvasRenderingContext2d,
@@ -115,8 +115,8 @@ impl Dynamic for ContextMethodValue {
                 Ok(ImageDataValue { image_data }.into_value().into())
             }
             ContextMethod::PutImageData => {
-                let tup = motoko::vm::match_tuple(4, args)?;
-                let i = todo!(); /* &tup[0]; */
+                let tup = motoko::vm::match_tuple(3, args)?;
+                let i = todo!();
                 let x = motoko::vm::assert_value_is_f64(&tup[1])?;
                 let y = motoko::vm::assert_value_is_f64(&tup[2])?;
                 self.context
