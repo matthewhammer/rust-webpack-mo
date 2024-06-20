@@ -82,7 +82,43 @@ pub fn draw_on_canvas(canvas_id: &str) -> Result<(), JsValue> {
     // c.arc(137.0, 137.0, 42.666, 0.0, 3.0 * std::f64::consts::PI);
     // c.stroke();
     //
-    let program = parse_static!("var frames = 0; ignore window.requestAnimationFrame(func(t){ frames := frames + 1; let gs = window.navigator.getGamepads(); for (g in gs.iter()) { } }); window.addEventListener(\"keydown\", func(e){ consoleLog(\"Motoko key press\"); }); window.addEventListener(\"click\", func(e){ consoleLog(\"Motoko mouse click\"); }); consoleLog(\"hello from Motoko\"); let c = canvas.getContext(\"2d\"); consoleLog(\"hello from Motoko 2\"); consoleLog(\"hello from Motoko 3\"); c.beginPath(); consoleLog(\"hello from Motoko 4\"); c.arc(137.0, 137.0, 42.666, 0.0, 9.42); c.stroke(); consoleLog(\"hello from Motoko 5\"); var x = 666;").clone();
+    let program = parse_static!(
+        r#"
+var frames = 0;
+let c = canvas.getContext("2d");
+let i = c.getImageData(0, 0, 16, 16);
+
+var i = 0;
+var y = 0.0;
+var j = 0;
+var x = 0.0;
+var lastTime = 0.0;
+func frame(t) {
+  let diff = t - lastTime;
+  lastTime := t;
+  consoleLog((1000.0 / diff, frames));
+  i := 0;
+  y := 0.0;
+  frames := frames + 1;
+  // 320 x 240 = (20 x 15) x 16
+  while(i < 30) {
+      j := 0;
+      x := 0.0;
+      while(j < 30) {
+        x := x + 16.0;
+        j := j + 1;
+        c.setFillStyle("red");
+        c.fillRect(x, y, 16.0, 16.0);
+        // c.putImageData(i, x, y);
+      };
+      i := i + 1;
+      y := y + 16.0;
+  };
+  ignore window.requestAnimationFrame(frame)
+};
+ignore window.requestAnimationFrame(frame);"#
+    )
+    .clone();
 
     movm::update(|core| {
         core.eval_open_block(

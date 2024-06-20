@@ -11,6 +11,9 @@ edition = "2018"
 [lib]
 crate-type = ["cdylib"]
 
+[profile.dev]
+opt-level = 3
+
 [profile.release]
 # This makes the compiled code faster and smaller, but it makes compiling slower,
 # so it's only enabled in release mode.
@@ -40,7 +43,7 @@ im-rc = { version = "15.1.0", features = ["serde"] }
 # like the DOM.
 [dependencies.web-sys]
 version = "0.3.22"
-features = ["console", "Window", "HtmlCanvasElement", "CanvasRenderingContext2d", "Document", "Event", "KeyboardEvent", "MouseEvent", "Navigator", "Gamepad", "GamepadButton"]
+features = ["console", "Window", "HtmlCanvasElement", "CanvasRenderingContext2d", "Document", "Event", "KeyboardEvent", "MouseEvent", "Navigator", "Gamepad", "GamepadButton", "ImageData"]
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
